@@ -139,5 +139,26 @@ class TestHRPortalAPI(unittest.TestCase):
         self.assertFalse(res_data['success'])
         self.assertTrue(len(res_data['errors']) > 0)
 
+    def test_contact_recaptcha_validation_when_key_set(self):
+        """Test that missing recaptchaToken fails when RECAPTCHA_SECRET_KEY is configured."""
+        import os
+        os.environ['RECAPTCHA_SECRET_KEY'] = 'test_secret_key'
+        try:
+            contact_data = {
+                'name': 'Test Tester',
+                'email': 'tester@company.com',
+                'subject': 'Integration',
+                'message': 'This is a test message of 10+ characters.'
+            }
+            response = self.client.post('/api/contact',
+                                        data=json.dumps(contact_data),
+                                        content_type='application/json')
+            self.assertEqual(response.status_code, 400)
+            res_data = json.loads(response.data.decode('utf-8'))
+            self.assertFalse(res_data['success'])
+            self.assertIn("reCAPTCHA verification is required.", res_data['errors'])
+        finally:
+            del os.environ['RECAPTCHA_SECRET_KEY']
+
 if __name__ == '__main__':
     unittest.main()

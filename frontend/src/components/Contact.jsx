@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Mail, Phone, MapPin, Link as LinkIcon, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,38 @@ export default function Contact() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
+
+  const [recaptchaTheme, setRecaptchaTheme] = useState(() => {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  });
+
+  // Dynamically update reCAPTCHA theme when document theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      setRecaptchaTheme(currentTheme === 'dark' ? 'dark' : 'light');
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleRecaptchaChange = (token) => {
+    setRecaptchaToken(token);
+    if (token && errors.recaptcha) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.recaptcha;
+        return next;
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,6 +72,11 @@ export default function Contact() {
       nextErrors.message = 'Message must be at least 10 characters long.';
     }
 
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    if (siteKey && !recaptchaToken) {
+      nextErrors.recaptcha = 'Please complete the reCAPTCHA verification.';
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -53,6 +91,11 @@ export default function Contact() {
 
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const apiUrl = `${apiBaseUrl}/api/contact`;
+    
+    const payload = {
+      ...formData,
+      recaptchaToken: recaptchaToken
+    };
 
     try {
       const response = await fetch(apiUrl, {
@@ -60,7 +103,7 @@ export default function Contact() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();
@@ -68,6 +111,10 @@ export default function Contact() {
       if (result.success) {
         setSubmitted(true);
         setFormData({ name: '', email: '', subject: '', message: '' });
+        setRecaptchaToken(null);
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+        }
         
         if (!result.credentials_configured) {
           console.warn(
@@ -83,10 +130,15 @@ export default function Contact() {
             else if (err.includes('email')) apiErrors.email = err;
             else if (err.includes('Category')) apiErrors.subject = err;
             else if (err.includes('Message')) apiErrors.message = err;
+            else if (err.includes('reCAPTCHA')) apiErrors.recaptcha = err;
           });
           setErrors(apiErrors);
         }
         setErrorMessage(result.message || 'Failed to submit form.');
+        setRecaptchaToken(null);
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+        }
       }
     } catch (err) {
       console.error('Contact submit error:', err);
@@ -96,12 +148,16 @@ export default function Contact() {
           const directResponse = await fetch('http://127.0.0.1:5000/api/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(payload)
           });
           const directData = await directResponse.json();
           if (directData.success) {
             setSubmitted(true);
             setFormData({ name: '', email: '', subject: '', message: '' });
+            setRecaptchaToken(null);
+            if (recaptchaRef.current) {
+              recaptchaRef.current.reset();
+            }
             setLoading(false);
             return;
           }
@@ -110,6 +166,10 @@ export default function Contact() {
         }
       }
       setErrorMessage('Connection Failure: Unable to reach contact server. Please verify backend is running.');
+      setRecaptchaToken(null);
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
     } finally {
       setLoading(false);
     }
@@ -279,6 +339,18 @@ export default function Contact() {
               />
               <span className="error-msg">{errors.message}</span>
             </div>
+
+            {import.meta.env.VITE_RECAPTCHA_SITE_KEY && (
+              <div className="form-group recaptcha-wrapper" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                  onChange={handleRecaptchaChange}
+                  theme={recaptchaTheme}
+                />
+                {errors.recaptcha && <span className="error-msg" style={{ marginTop: '0.5rem', display: 'block', textAlign: 'center' }}>{errors.recaptcha}</span>}
+              </div>
+            )}
 
             <motion.button
               type="submit"

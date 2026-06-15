@@ -5,6 +5,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from threading import Thread
+import urllib.request
+import urllib.parse
+import json
 import pandas as pd
 import numpy as np
 from flask import Flask, request, jsonify
@@ -307,6 +310,29 @@ def contact():
             errors.append("Category is required.")
         if not message or len(message) < 10:
             errors.append("Message must be at least 10 characters long.")
+            
+        # Verify reCAPTCHA token if secret key is configured
+        secret_key = os.environ.get('RECAPTCHA_SECRET_KEY')
+        if secret_key:
+            recaptcha_token = data.get('recaptchaToken')
+            if not recaptcha_token:
+                errors.append("reCAPTCHA verification is required.")
+            else:
+                try:
+                    verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+                    params = urllib.parse.urlencode({
+                        'secret': secret_key,
+                        'response': recaptcha_token
+                    }).encode('utf-8')
+                    
+                    req = urllib.request.Request(verify_url, data=params, method='POST')
+                    with urllib.request.urlopen(req, timeout=10) as response:
+                        res_data = json.loads(response.read().decode())
+                        if not res_data.get('success'):
+                            errors.append("reCAPTCHA verification failed. Please try again.")
+                except Exception as e:
+                    print(f"Error during reCAPTCHA verification: {e}")
+                    errors.append("reCAPTCHA verification service is temporarily unavailable. Please try again later.")
             
         if errors:
             return jsonify({'success': False, 'errors': errors}), 400

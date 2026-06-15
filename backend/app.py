@@ -247,7 +247,7 @@ def predict():
         }), 500
 
 def send_email_async(name, email, subject, message):
-    smtp_user = os.environ.get('SMTP_USER', 'amanrajbhar199918@gmail.com')
+    smtp_user = os.environ.get('SMTP_USER', 'amanrajbhar1999182921@gmail.com')
     smtp_password = os.environ.get('SMTP_PASSWORD')
     
     if not smtp_password:
@@ -257,7 +257,7 @@ def send_email_async(name, email, subject, message):
     try:
         msg = MIMEMultipart()
         msg['From'] = smtp_user
-        msg['To'] = 'amanrajbhar199918@gmail.com'
+        msg['To'] = 'amanrajbhar1999182921@gmail.com'
         msg['Subject'] = f"[HR Attrition Portal] {subject} - From {name}"
         
         body = f"""You have received a new message from the HR Attrition Prediction portal contact form.
@@ -277,7 +277,7 @@ Message:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(smtp_user, smtp_password)
-        server.sendmail(smtp_user, 'amanrajbhar199918@gmail.com', msg.as_string())
+        server.sendmail(smtp_user, 'amanrajbhar1999182921@gmail.com', msg.as_string())
         server.quit()
         print("Email sent successfully.")
     except Exception as e:

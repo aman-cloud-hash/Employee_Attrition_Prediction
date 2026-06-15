@@ -1,4 +1,19 @@
 import os
+
+# Load .env file manually if it exists (useful for local development)
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+if os.path.exists(env_path):
+    with open(env_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                parts = line.split('=', 1)
+                if len(parts) == 2:
+                    key, val = parts[0].strip(), parts[1].strip()
+                    if val.startswith(('"', "'")) and val.endswith(('"', "'")):
+                        val = val[1:-1]
+                    os.environ[key] = val
+
 import pickle
 import traceback
 import smtplib

@@ -275,8 +275,16 @@ Message:
 """
         msg.attach(MIMEText(body, 'plain'))
         
+        # Resolve to IPv4 specifically to prevent Render IPv6 [Errno 101] Network is unreachable error
+        import socket
+        try:
+            smtp_host = socket.gethostbyname('smtp.gmail.com')
+        except Exception as dns_err:
+            print(f"SMTP DNS resolution failed: {dns_err}")
+            smtp_host = 'smtp.gmail.com'
+            
         # Connect to Gmail SMTP
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server = smtplib.SMTP(smtp_host, 587)
         server.starttls()
         server.login(smtp_user, smtp_password)
         server.sendmail(smtp_user, 'amanrajbhar1999182921@gmail.com', msg.as_string())

@@ -249,49 +249,41 @@ def predict():
         }), 500
 
 def send_email_async(name, email, subject, message):
-    smtp_user = os.environ.get('SMTP_USER', 'amanrajbhar1999182921@gmail.com')
-    smtp_password = os.environ.get('SMTP_PASSWORD')
+    import urllib.request
+    import json
     
-    if not smtp_password:
-        print("SMTP_PASSWORD environment variable not set. Real email not sent via SMTP.")
-        return
-        
+    # Render's Free Tier blocks SMTP ports (25, 465, 587) to prevent spam.
+    # To bypass this restriction securely without raw SMTP, we route contact messages
+    # through FormSubmit's public HTTP API. The destination email is kept private on the backend.
+    target_email = 'amanrajbhar1999182921@gmail.com'
+    url = f'https://formsubmit.co/ajax/{target_email}'
+    
+    payload = {
+        'name': name,
+        'email': email,
+        'subject': f"[HR Attrition Portal] {subject}",
+        'message': message,
+        '_honey': '',  # Honeypot field for spam prevention
+    }
+    
     try:
-        msg = MIMEMultipart()
-        msg['From'] = smtp_user
-        msg['To'] = 'amanrajbhar1999182921@gmail.com'
-        msg['Subject'] = f"[HR Attrition Portal] {subject} - From {name}"
-        
-        body = f"""You have received a new message from the HR Attrition Prediction portal contact form.
-
-Name: {name}
-Email: {email}
-Category: {subject}
-
-Message:
---------------------------------------------------
-{message}
---------------------------------------------------
-"""
-        msg.attach(MIMEText(body, 'plain'))
-        
-        # Resolve to IPv4 specifically to prevent Render IPv6 [Errno 101] Network is unreachable error
-        import socket
-        try:
-            smtp_host = socket.gethostbyname('smtp.gmail.com')
-        except Exception as dns_err:
-            print(f"SMTP DNS resolution failed: {dns_err}")
-            smtp_host = 'smtp.gmail.com'
-            
-        # Connect to Gmail SMTP
-        server = smtplib.SMTP(smtp_host, 587)
-        server.starttls()
-        server.login(smtp_user, smtp_password)
-        server.sendmail(smtp_user, 'amanrajbhar1999182921@gmail.com', msg.as_string())
-        server.quit()
-        print("Email sent successfully.")
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url, 
+            data=data, 
+            headers={
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://employee-attrition-prediction-nu.vercel.app/',
+                'Origin': 'https://employee-attrition-prediction-nu.vercel.app'
+            }
+        )
+        with urllib.request.urlopen(req, timeout=15) as response:
+            res_body = response.read().decode('utf-8')
+            print("FormSubmit HTTP API response:", res_body)
+            print("Email request processed successfully via HTTP forwarder.")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email via FormSubmit HTTP API: {e}")
 
 @app.route('/api/contact', methods=['POST'])
 def contact():

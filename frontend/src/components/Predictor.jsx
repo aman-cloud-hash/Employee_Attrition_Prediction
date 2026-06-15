@@ -45,7 +45,7 @@ export default function Predictor() {
 
     // Monthly Income
     if (!formData.MonthlyIncome) nextErrors.MonthlyIncome = 'Income is required.';
-    else if (isNaN(income) || income < 1000 || income > 100000) nextErrors.MonthlyIncome = 'Income must be between $1,000 and $100,000.';
+    else if (isNaN(income) || income < 10000 || income > 1000000) nextErrors.MonthlyIncome = 'Income must be between ₹10,000 and ₹1,000,000.';
 
     // Distance From Home
     if (!formData.DistanceFromHome) nextErrors.DistanceFromHome = 'Distance is required.';
@@ -190,14 +190,14 @@ export default function Predictor() {
 
               {/* Monthly Income */}
               <div className="form-group">
-                <label htmlFor="MonthlyIncome">Monthly Income ($)</label>
+                <label htmlFor="MonthlyIncome">Monthly Income (₹)</label>
                 <input
                   type="number"
                   id="MonthlyIncome"
                   name="MonthlyIncome"
                   value={formData.MonthlyIncome}
                   onChange={handleInputChange}
-                  placeholder="e.g., 5400"
+                  placeholder="e.g., 50000"
                   className={errors.MonthlyIncome ? 'invalid' : ''}
                 />
                 <span className="error-msg">{errors.MonthlyIncome}</span>

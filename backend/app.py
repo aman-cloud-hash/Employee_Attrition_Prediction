@@ -108,8 +108,8 @@ def predict():
             
         try:
             monthly_income = float(data['MonthlyIncome'])
-            if monthly_income < 0:
-                errors.append("Monthly Income cannot be negative.")
+            if monthly_income < 10000 or monthly_income > 1000000:
+                errors.append("Monthly Income must be between ₹10,000 and ₹1,000,000.")
         except ValueError:
             errors.append("Monthly Income must be a valid number.")
             
@@ -160,7 +160,8 @@ def predict():
         # 2. Convert user input into 16-column format
         vec_16 = {}
         vec_16['Age'] = float(age)
-        vec_16['MonthlyIncome'] = float(monthly_income)
+        # Convert INR to USD for the model (scale factor of 10.0 to map Indian average salaries to US training average)
+        vec_16['MonthlyIncome'] = float(monthly_income) / 10.0
         vec_16['DistanceFromHome'] = float(distance_from_home)
         vec_16['YearsAtCompany'] = float(years_at_company)
         vec_16['JobSatisfaction'] = float(job_satisfaction)

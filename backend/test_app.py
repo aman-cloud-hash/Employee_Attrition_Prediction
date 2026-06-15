@@ -67,7 +67,7 @@ class TestHRPortalAPI(unittest.TestCase):
         """Test prediction for an employee with highly stable indicators (Low Risk expectation)."""
         low_risk_data = {
             'Age': 52,
-            'MonthlyIncome': 16000,
+            'MonthlyIncome': 160000, # In Rupees (maps to $16,000 after /10.0)
             'DistanceFromHome': 2,
             'YearsAtCompany': 12,
             'JobSatisfaction': 4,
@@ -89,7 +89,7 @@ class TestHRPortalAPI(unittest.TestCase):
         """Test prediction for an employee with high-attrition indicators (High Risk expectation)."""
         high_risk_data = {
             'Age': 19,
-            'MonthlyIncome': 1500,
+            'MonthlyIncome': 15000, # In Rupees (maps to $1,500 after /10.0)
             'DistanceFromHome': 28,
             'YearsAtCompany': 1,
             'JobSatisfaction': 1,

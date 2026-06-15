@@ -115,8 +115,8 @@ def predict():
             
         try:
             distance_from_home = float(data['DistanceFromHome'])
-            if distance_from_home < 0:
-                errors.append("Distance from Home cannot be negative.")
+            if distance_from_home < 1 or distance_from_home > 100:
+                errors.append("Distance from Home must be between 1 and 100 km.")
         except ValueError:
             errors.append("Distance from Home must be a valid number.")
             
@@ -162,7 +162,8 @@ def predict():
         vec_16['Age'] = float(age)
         # Convert INR to USD for the model (scale factor of 10.0 to map Indian average salaries to US training average)
         vec_16['MonthlyIncome'] = float(monthly_income) / 10.0
-        vec_16['DistanceFromHome'] = float(distance_from_home)
+        # Convert Kilometers to Miles for the model (1 km = 0.621371 miles)
+        vec_16['DistanceFromHome'] = float(distance_from_home) * 0.621371
         vec_16['YearsAtCompany'] = float(years_at_company)
         vec_16['JobSatisfaction'] = float(job_satisfaction)
         vec_16['OverTime_Yes'] = 1.0 if overtime == 'Yes' else 0.0

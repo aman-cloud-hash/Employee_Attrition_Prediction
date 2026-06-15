@@ -49,7 +49,7 @@ export default function Predictor() {
 
     // Distance From Home
     if (!formData.DistanceFromHome) nextErrors.DistanceFromHome = 'Distance is required.';
-    else if (isNaN(distance) || distance < 1 || distance > 100) nextErrors.DistanceFromHome = 'Distance must be between 1 and 100.';
+    else if (isNaN(distance) || distance < 1 || distance > 100) nextErrors.DistanceFromHome = 'Distance must be between 1 and 100 km.';
 
     // Years At Company
     if (!formData.YearsAtCompany) nextErrors.YearsAtCompany = 'Years at company is required.';
@@ -205,14 +205,14 @@ export default function Predictor() {
 
               {/* Distance From Home */}
               <div className="form-group">
-                <label htmlFor="DistanceFromHome">Distance From Home (miles/km)</label>
+                <label htmlFor="DistanceFromHome">Distance From Home (km)</label>
                 <input
                   type="number"
                   id="DistanceFromHome"
                   name="DistanceFromHome"
                   value={formData.DistanceFromHome}
                   onChange={handleInputChange}
-                  placeholder="e.g., 8"
+                  placeholder="e.g., 10"
                   className={errors.DistanceFromHome ? 'invalid' : ''}
                 />
                 <span className="error-msg">{errors.DistanceFromHome}</span>
